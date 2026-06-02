@@ -1,17 +1,15 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 
 from email_analysis.analyze_email import analyze_email
 
 app = Flask(__name__)
 
-# Enable CORS
 CORS(app)
-
 
 @app.route("/")
 def home():
-    return "Smart Email Security System API Running"
+    return send_file("smart_email_security_system.html")
 
 
 @app.route("/predict", methods=["POST"])
@@ -33,7 +31,6 @@ def predict():
                 "error": "Email cannot be empty"
             }), 400
 
-        # Run complete analysis
         result = analyze_email(email)
 
         return jsonify(result)
@@ -46,9 +43,7 @@ def predict():
 
 
 if __name__ == "__main__":
-
     app.run(
         host="0.0.0.0",
-        port=5000,
-        debug=True
+        port=5000
     )
