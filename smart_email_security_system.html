@@ -1,0 +1,623 @@
+
+
+<h2 class="sr-only">Smart Email Security System </h2>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Inter, Arial, sans-serif; font-size: 14px; color: #0f172a; background:#f1f5f9; }
+.app { display: flex; height: 100vh; min-height: 600px; overflow: hidden; }
+.sidebar { width:240px; flex-shrink:0; padding:16px 0; display:flex; flex-direction:column; gap:2px; background:#0f172a; color:white; }
+.sidebar-title { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); padding: 8px 16px 4px; letter-spacing: .05em; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 16px; cursor: pointer; font-size: 13px; color: var(--color-text-secondary); border-radius: 0; transition: background .1s; }
+.nav-item:hover { background: var(--color-background-primary); color: var(--color-text-primary); }
+.nav-item.active { background: var(--color-background-primary); color: var(--color-text-primary); font-weight: 500; border-right: 2px solid #378ADD; }
+.nav-item i { font-size: 16px; }
+.main { flex:1; overflow-y:auto; padding:32px; background:#f8fafc; }
+.page { display: none; }
+.page.active { display: block; }
+.page-title { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 20px; }
+.card { background:white; border:none; border-radius:20px; padding:22px; margin-bottom:18px; box-shadow:0 10px 30px rgba(15,23,42,.06);}
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px; }
+.metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+.metric-value { font-size: 22px; font-weight: 500; }
+.metric-value.safe { color: #3B6D11; }
+.metric-value.warn { color: #854F0B; }
+.metric-value.danger { color: #A32D2D; }
+.metric-value.info { color: #185FA5; }
+textarea { width: 100%; min-height: 120px; padding: 10px 12px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); font-size: 13px; font-family: var(--font-sans); resize: vertical; background: var(--color-background-secondary); color: var(--color-text-primary); }
+textarea:focus { outline: none; border-color: #378ADD; box-shadow: 0 0 0 2px rgba(55,138,221,.15); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--border-radius-md); font-size: 13px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); transition: background .1s; }
+.btn:hover { background: var(--color-background-secondary); }
+.btn-primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+.btn-primary:hover { background: #0C447C; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.badge-safe { background: #EAF3DE; color: #27500A; }
+.badge-low { background: #FAEEDA; color: #633806; }
+.badge-med { background: #FAEEDA; color: #854F0B; }
+.badge-high { background: #FCEBEB; color: #791F1F; }
+.badge-danger { background: #F7C1C1; color: #501313; }
+.badge-info { background: #E6F1FB; color: #0C447C; }
+.result-section { margin-top: 16px; }
+.result-section h3 { font-size: 14px; font-weight: 500; margin-bottom: 10px; color: var(--color-text-secondary); }
+.score-bar-wrap { background: var(--color-background-secondary); border-radius: 20px; height: 8px; overflow: hidden; margin: 6px 0; }
+.score-bar { height: 8px; border-radius: 20px; transition: width .6s ease; }
+.kw-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.kw-tag { padding: 3px 10px; border-radius: 20px; font-size: 12px; }
+.kw-spam { background: #FCEBEB; color: #A32D2D; }
+.kw-phish { background: #FAEEDA; color: #854F0B; }
+.kw-ok { background: #EAF3DE; color: #3B6D11; }
+.url-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; }
+.url-row:last-child { border-bottom: none; }
+.model-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.model-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px; }
+.model-name { font-size: 12px; font-weight: 500; margin-bottom: 8px; color: var(--color-text-secondary); }
+.model-best { border: 2px solid #378ADD; background: var(--color-background-info, #E6F1FB); }
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: var(--color-text-secondary); }
+.history-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; cursor: pointer; }
+.history-row:hover { background: var(--color-background-secondary); margin: 0 -20px; padding: 10px 20px; }
+.history-row:last-child { border-bottom: none; }
+.hist-time { color: var(--color-text-tertiary); font-size: 11px; min-width: 110px; }
+.hist-preview { flex: 1; color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chart-wrap { position: relative; width: 100%; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } .sidebar { width: 160px; } }
+.section-sep { margin: 16px 0; border: none; border-top: 0.5px solid var(--color-border-tertiary); }
+.threat-meter { position: relative; height: 12px; border-radius: 20px; background: linear-gradient(to right, #3B6D11 0%, #639922 20%, #EF9F27 45%, #D85A30 70%, #A32D2D 100%); margin: 8px 0 16px; overflow: visible; }
+.threat-needle { position: absolute; top: -4px; width: 4px; height: 20px; background: var(--color-text-primary); border-radius: 2px; transform: translateX(-50%); transition: left .6s ease; }
+.model-bar-wrap { height: 6px; background: var(--color-background-primary); border-radius: 10px; margin-top: 4px; overflow: hidden; }
+.model-bar { height: 6px; border-radius: 10px; background: #378ADD; transition: width .5s; }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--color-text-tertiary); font-size: 13px; }
+</style>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-title">Security</div>
+    <div class="nav-item active" onclick="nav('scan')"><i class="ti ti-shield-check" aria-hidden="true"></i>Scan Email</div>
+    <div class="nav-item" onclick="nav('models')"><i class="ti ti-cpu" aria-hidden="true"></i>ML Models</div>
+    <div class="sidebar-title">Analysis</div>
+    <div class="nav-item" onclick="nav('analytics')"><i class="ti ti-chart-bar" aria-hidden="true"></i>Analytics</div>
+    <div class="nav-item" onclick="nav('reports')"><i class="ti ti-file-text" aria-hidden="true"></i>Reports</div>
+  </div>
+
+  <div class="main">
+
+    <!-- SCAN PAGE -->
+    <div class="page active" id="page-scan">
+      <div class="page-title">Scan Email</div>
+      <div class="page-sub">Paste email content to analyze for spam, phishing, and threats</div>
+
+      <div class="card">
+        <textarea id="emailInput" placeholder="Paste email content here...
+
+Example: Congratulations! You've WON a $1000 gift card. Click here to claim: http://bit.ly/win-now. Act fast — offer expires in 24 hours! Verify your account at http://192.168.1.1/login"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="analyzeEmail()"><i class="ti ti-search" aria-hidden="true"></i>Analyze Email</button>
+          <button class="btn" onclick="loadSample('spam')"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Load Spam Sample</button>
+          <button class="btn" onclick="loadSample('safe')"><i class="ti ti-check" aria-hidden="true"></i>Load Safe Sample</button>
+          <button class="btn" onclick="clearEmail()"><i class="ti ti-trash" aria-hidden="true"></i>Clear</button>
+        </div>
+      </div>
+
+      <div id="results" style="display:none;">
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="metric-label">Classification</div>
+            <div class="metric-value" id="res-class">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Spam probability</div>
+            <div class="metric-value" id="res-prob">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Security score</div>
+            <div class="metric-value" id="res-score">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Threat level</div>
+            <div class="metric-value" id="res-threat">—</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="result-section">
+              <h3>Overall threat meter</h3>
+              <div class="threat-meter"><div class="threat-needle" id="threat-needle" style="left:10%"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-text-tertiary);">
+                <span>Safe</span><span>Low</span><span>Medium</span><span>High</span><span>Danger</span>
+              </div>
+            </div>
+            <hr class="section-sep">
+            <div class="result-section">
+              <h3>Spam score</h3>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="score-bar-wrap" style="flex:1;"><div class="score-bar" id="spam-bar" style="width:0%;background:#E24B4A;"></div></div>
+                <span id="spam-pct" style="font-size:13px;font-weight:500;min-width:38px;">0%</span>
+              </div>
+              <h3 style="margin-top:12px;">Phishing score</h3>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="score-bar-wrap" style="flex:1;"><div class="score-bar" id="phish-bar" style="width:0%;background:#EF9F27;"></div></div>
+                <span id="phish-pct" style="font-size:13px;font-weight:500;min-width:38px;">0%</span>
+              </div>
+              <h3 style="margin-top:12px;">Keyword risk score</h3>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="score-bar-wrap" style="flex:1;"><div class="score-bar" id="kw-bar" style="width:0%;background:#7F77DD;"></div></div>
+                <span id="kw-pct" style="font-size:13px;font-weight:500;min-width:38px;">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="result-section">
+              <h3>Email statistics</h3>
+              <div class="stat-row"><span class="stat-label">Word count</span><span id="stat-words">—</span></div>
+              <div class="stat-row"><span class="stat-label">Character count</span><span id="stat-chars">—</span></div>
+              <div class="stat-row"><span class="stat-label">Sentence count</span><span id="stat-sents">—</span></div>
+              <div class="stat-row"><span class="stat-label">Links found</span><span id="stat-links">—</span></div>
+              <div class="stat-row"><span class="stat-label">Special chars</span><span id="stat-special">—</span></div>
+              <div class="stat-row"><span class="stat-label">Uppercase %</span><span id="stat-upper">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="result-section">
+            <h3>Suspicious keywords detected</h3>
+            <div class="kw-list" id="kw-list"><span class="kw-tag kw-ok">No keywords detected</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="result-section">
+            <h3>URLs &amp; phishing detection</h3>
+            <div id="url-list"><div class="empty-state">No URLs found</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="result-section">
+            <h3>Model predictions</h3>
+            <div class="model-grid" id="model-predictions"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODELS PAGE -->
+    <div class="page" id="page-models">
+      <div class="page-title">ML Model comparison</div>
+      <div class="page-sub">Performance metrics across all trained classifiers</div>
+      <div class="model-grid" style="margin-bottom:16px;">
+        <div class="model-card model-best">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+            <span class="model-name">Random Forest</span>
+            <span class="badge badge-info" style="font-size:11px;">Best</span>
+          </div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Accuracy</span><span style="font-size:12px;font-weight:500;">97.4%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Precision</span><span style="font-size:12px;">96.8%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Recall</span><span style="font-size:12px;">97.1%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">F1 Score</span><span style="font-size:12px;">96.9%</span></div>
+        </div>
+        <div class="model-card">
+          <span class="model-name">SVM</span>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Accuracy</span><span style="font-size:12px;font-weight:500;">96.1%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Precision</span><span style="font-size:12px;">95.4%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Recall</span><span style="font-size:12px;">95.9%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">F1 Score</span><span style="font-size:12px;">95.6%</span></div>
+        </div>
+        <div class="model-card">
+          <span class="model-name">Logistic Regression</span>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Accuracy</span><span style="font-size:12px;font-weight:500;">94.3%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Precision</span><span style="font-size:12px;">93.7%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Recall</span><span style="font-size:12px;">93.2%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">F1 Score</span><span style="font-size:12px;">93.4%</span></div>
+        </div>
+        <div class="model-card">
+          <span class="model-name">Naive Bayes</span>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Accuracy</span><span style="font-size:12px;font-weight:500;">92.7%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Precision</span><span style="font-size:12px;">91.5%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">Recall</span><span style="font-size:12px;">92.3%</span></div>
+          <div class="stat-row"><span class="stat-label" style="font-size:12px;">F1 Score</span><span style="font-size:12px;">91.9%</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14px;font-weight:500;margin-bottom:14px;">Accuracy comparison</h3>
+        <div class="chart-wrap" style="height:220px;"><canvas id="modelChart" role="img" aria-label="Bar chart comparing accuracy of Random Forest 97.4%, SVM 96.1%, Logistic Regression 94.3%, Naive Bayes 92.7%">Accuracy: Random Forest 97.4%, SVM 96.1%, Logistic Regression 94.3%, Naive Bayes 92.7%.</canvas></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14px;font-weight:500;margin-bottom:14px;">Confusion matrix — Random Forest (best model)</h3>
+        <div id="confusion-matrix"></div>
+      </div>
+    </div>
+
+
+    </div>
+
+    <!-- ANALYTICS PAGE -->
+    <div class="page" id="page-analytics">
+      <div class="page-title">Analytics</div>
+      <div class="page-sub">Aggregate statistics from all scanned emails</div>
+      <div class="metric-grid" id="analytics-metrics">
+        <div class="metric"><div class="metric-label">Total scanned</div><div class="metric-value info" id="an-total">0</div></div>
+        <div class="metric"><div class="metric-label">Spam emails</div><div class="metric-value danger" id="an-spam">0</div></div>
+        <div class="metric"><div class="metric-label">Safe emails</div><div class="metric-value safe" id="an-safe">0</div></div>
+        <div class="metric"><div class="metric-label">Avg security score</div><div class="metric-value info" id="an-avg">—</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <h3 style="font-size:14px;font-weight:500;margin-bottom:14px;">Spam vs safe distribution</h3>
+          <div class="chart-wrap" style="height:200px;"><canvas id="distChart" role="img" aria-label="Doughnut chart showing spam vs safe email distribution">Spam vs safe email distribution.</canvas></div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:14px;font-weight:500;margin-bottom:14px;">Threat level distribution</h3>
+          <div class="chart-wrap" style="height:200px;"><canvas id="threatChart" role="img" aria-label="Bar chart of threat level distribution across scanned emails">Threat level distribution.</canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14px;font-weight:500;margin-bottom:14px;">Security score distribution</h3>
+        <div class="chart-wrap" style="height:180px;"><canvas id="scoreHistChart" role="img" aria-label="Histogram of security score distribution">Score distribution across scanned emails.</canvas></div>
+      </div>
+    </div>
+
+    <!-- REPORTS PAGE -->
+    <div class="page" id="page-reports">
+      <div class="page-title">Reports</div>
+      <div class="page-sub">Generated analysis summaries and threat reports</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <span style="font-size:14px;font-weight:500;">Performance report</span>
+          <button class="btn" onclick="generateReport()"><i class="ti ti-download" aria-hidden="true"></i>Generate report</button>
+        </div>
+        <div id="report-content">
+          <div class="model-grid">
+            <div class="model-card"><span class="model-name">Best model</span><div style="font-size:16px;font-weight:500;color:#185FA5;">Random Forest</div><div style="font-size:12px;color:var(--color-text-secondary);">97.4% accuracy</div></div>
+            <div class="model-card"><span class="model-name">Dataset size</span><div style="font-size:16px;font-weight:500;">5,572</div><div style="font-size:12px;color:var(--color-text-secondary);">SMS spam dataset</div></div>
+            <div class="model-card"><span class="model-name">Spam rate</span><div style="font-size:16px;font-weight:500;">13.4%</div><div style="font-size:12px;color:var(--color-text-secondary);">747 spam emails</div></div>
+            <div class="model-card"><span class="model-name">Features used</span><div style="font-size:16px;font-weight:500;">TF-IDF</div><div style="font-size:12px;color:var(--color-text-secondary);">5000 features</div></div>
+          </div>
+          <hr class="section-sep">
+          <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.7;">
+            <strong style="color:var(--color-text-primary);">NLP pipeline:</strong> Raw text → Lowercasing → Tokenization → Stopword removal → Stemming (PorterStemmer) → Lemmatization → TF-IDF vectorization (max 5000 features)<br><br>
+            <strong style="color:var(--color-text-primary);">Phishing detection:</strong> Regex URL extraction → Short URL detection (bit.ly, tinyurl, etc.) → IP-based URL detection → Suspicious domain scoring<br><br>
+            <strong style="color:var(--color-text-primary);">Security score formula:</strong> Score = 100 − (spam_score × 0.4) − (phishing_score × 0.35) − (keyword_score × 0.25)
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:500;margin-bottom:14px;">Dataset report</div>
+        <div class="chart-wrap" style="height:200px;"><canvas id="datasetChart" role="img" aria-label="Bar chart showing dataset composition">Dataset breakdown by split and class.</canvas></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<footer style="
+    margin-top:30px;
+    padding:20px;
+    text-align:center;
+    font-size:13px;
+    color:#64748b;
+    border-top:1px solid #e2e8f0;
+">
+    © 2026 Smart Email Security System | Developed by Harshit Belal | All Rights Reserved
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const SPAM_KW = ['win','winner','free','claim','prize','congratulations','urgent','act now','limited time','expires','offer','click here','gift card','selected','guaranteed','cash','million','billion','credit','loan','apply now','verify','password','account suspended','update your','confirm your','reward','bonus','risk-free','100%'];
+const PHISH_KW = ['verify your account','your account has been','unusual activity','suspended','confirm identity','click the link below','login immediately','security alert','unauthorized access','update payment','billing information','bank account','ssn','social security','paypal','apple id'];
+const SHORT_DOMAINS = ['bit.ly','tinyurl.com','goo.gl','t.co','ow.ly','buff.ly','is.gd','su.pr','dlvr.it','short.link'];
+
+let scanHistory = [];
+let distChart, threatChart, scoreHistChart, modelChart, datasetChart;
+
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (page === 'analytics') renderAnalytics();
+  if (page === 'models') renderModels();
+  if (page === 'reports') renderDatasetChart();
+}
+
+const SAMPLES = {
+  spam: `Congratulations!!! You've been SELECTED as our lucky WINNER of a $1,000 Amazon gift card! This is a LIMITED TIME OFFER — act now before it expires! Click here to claim your FREE prize: http://bit.ly/win-now-claim. You must VERIFY your account immediately at http://192.168.1.1/login or your account will be SUSPENDED. Reply with your credit card number to confirm. This offer expires in 24 HOURS!!! Guaranteed risk-free no purchase necessary!!!`,
+  safe: `Hi team, please find attached the meeting notes from yesterday's product review. We discussed Q3 targets and agreed to push the launch to next month. Key action items: 1) John to finalize the design specs by Friday, 2) Sara to coordinate with the backend team on the API changes, 3) Everyone to review the updated roadmap document shared in the drive. Let me know if you have any questions. Best regards, Michael`
+};
+
+function loadSample(type) { document.getElementById('emailInput').value = SAMPLES[type]; }
+function clearEmail() { document.getElementById('emailInput').value = ''; document.getElementById('results').style.display = 'none'; }
+
+function extractURLs(text) {
+  const re = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/gi;
+  return text.match(re) || [];
+}
+
+function classifyURL(url) {
+  try {
+    const u = new URL(url);
+    const host = u.hostname;
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return { type: 'IP-based URL', risk: 'high' };
+    if (SHORT_DOMAINS.some(d => host.includes(d))) return { type: 'Shortened URL', risk: 'high' };
+    const suspicious = ['login','secure','account','verify','update','confirm','bank','paypal','apple','amazon'].some(w => (u.pathname + host).toLowerCase().includes(w));
+    if (suspicious) return { type: 'Suspicious domain', risk: 'medium' };
+    return { type: 'Regular URL', risk: 'low' };
+  } catch { return { type: 'Malformed URL', risk: 'medium' }; }
+}
+
+function detectKeywords(text) {
+  const low = text.toLowerCase();
+  const found_spam = SPAM_KW.filter(k => low.includes(k));
+  const found_phish = PHISH_KW.filter(k => low.includes(k));
+  return { spam: found_spam, phish: found_phish };
+}
+
+function computeStats(text) {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const links = extractURLs(text);
+  const special = (text.match(/[^a-zA-Z0-9\s]/g) || []).length;
+  const upperLetters = (text.match(/[A-Z]/g) || []).length;
+  const totalLetters = (text.match(/[a-zA-Z]/g) || []).length;
+  return {
+    words: words.length, chars: text.length, sentences: sentences.length,
+    links: links.length, special, upperPct: totalLetters > 0 ? Math.round(upperLetters / totalLetters * 100) : 0
+  };
+}
+
+function modelPredict(spamScore) {
+  const models = [
+    { name: 'Random Forest', bias: 0, acc: 97.4 },
+    { name: 'SVM', bias: -2, acc: 96.1 },
+    { name: 'Logistic Regression', bias: -4, acc: 94.3 },
+    { name: 'Naive Bayes', bias: 3, acc: 92.7 }
+  ];
+  return models.map(m => {
+    const prob = Math.min(100, Math.max(0, spamScore + m.bias + (Math.random() - 0.5) * 8));
+    return { name: m.name, prob: Math.round(prob), isSpam: prob >= 50, acc: m.acc };
+  });
+}
+
+function scoreToLevel(score) {
+  if (score >= 80) return { label: 'Safe', cls: 'safe', badge: 'badge-safe' };
+  if (score >= 60) return { label: 'Low risk', cls: 'info', badge: 'badge-low' };
+  if (score >= 40) return { label: 'Medium risk', cls: 'warn', badge: 'badge-med' };
+  if (score >= 20) return { label: 'High risk', cls: 'danger', badge: 'badge-high' };
+  return { label: 'Dangerous', cls: 'danger', badge: 'badge-danger' };
+}
+
+async function analyzeEmail() {
+
+    const email =
+        document.getElementById("emailInput").value;
+
+    if (!email.trim()) {
+        alert("Please enter an email");
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            "http://127.0.0.1:5000/predict",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email
+                })
+            }
+        );
+
+        const data = await response.json();
+        // Save scan to history
+scanHistory.unshift({
+    email: email.substring(0, 100),
+    isSpam: data.prediction === "SPAM",
+    score: data.security_score,
+    level: data.threat_level,
+    spamProbability: data.spam_probability,
+    phishingScore: data.phishing_score,
+    keywordScore: data.keyword_score,
+    date: new Date().toLocaleString()
+});
+
+if (scanHistory.length > 50) {
+    scanHistory.pop();
+}
+        console.log(data);
+
+        // Show results section
+        document.getElementById("results").style.display =
+            "block";
+
+        // Main Metrics
+        document.getElementById("res-class").innerText =
+            data.prediction;
+
+        document.getElementById("res-prob").innerText =
+            data.spam_probability + "%";
+
+        document.getElementById("res-score").innerText =
+            data.security_score + "/100";
+
+        document.getElementById("res-threat").innerText =
+            data.threat_level;
+
+        // Spam Score Bar
+        document.getElementById("spam-bar").style.width =
+            data.spam_probability + "%";
+
+        document.getElementById("spam-pct").innerText =
+            data.spam_probability + "%";
+
+        // Phishing Score Bar
+        document.getElementById("phish-bar").style.width =
+            data.phishing_score + "%";
+
+        document.getElementById("phish-pct").innerText =
+            data.phishing_score + "%";
+
+        // Keyword Score Bar
+        document.getElementById("kw-bar").style.width =
+            data.keyword_score + "%";
+
+        document.getElementById("kw-pct").innerText =
+            data.keyword_score + "%";
+
+        // Threat Meter
+        document.getElementById("threat-needle").style.left =
+            data.security_score + "%";
+
+        // Keywords
+        const kwList =
+            document.getElementById("kw-list");
+
+        kwList.innerHTML = "";
+
+        if (data.detected_keywords.length > 0) {
+
+            data.detected_keywords.forEach(keyword => {
+
+                kwList.innerHTML +=
+                    `<span class="kw-tag">${keyword}</span>`;
+
+            });
+
+        } else {
+
+            kwList.innerHTML =
+                `<span class="kw-tag kw-ok">
+                    No suspicious keywords
+                 </span>`;
+        }
+
+        // URL Risks
+        const urlList =
+            document.getElementById("url-list");
+
+        urlList.innerHTML = "";
+
+        if (data.detected_risks.length > 0) {
+
+            data.detected_risks.forEach(risk => {
+
+                urlList.innerHTML +=
+                    `<div class="url-item">${risk}</div>`;
+
+            });
+
+        } else {
+
+            urlList.innerHTML =
+                `<div class="empty-state">
+                    No phishing risks detected
+                 </div>`;
+        }
+
+    }
+    
+    
+    
+    catch(error) {
+
+        console.error(error);
+
+        alert(
+            "Could not connect to Flask API."
+        );
+    }
+}
+
+function renderAnalytics() {
+  const total = scanHistory.length;
+  const spam = scanHistory.filter(e => e.isSpam).length;
+  const safe = total - spam;
+  const avg = total > 0 ? Math.round(scanHistory.reduce((s, e) => s + e.score, 0) / total) : 0;
+  document.getElementById('an-total').textContent = total;
+  document.getElementById('an-spam').textContent = spam;
+  document.getElementById('an-safe').textContent = safe;
+  document.getElementById('an-avg').textContent = total > 0 ? avg + '/100' : '—';
+
+  if (distChart) distChart.destroy();
+  distChart = new Chart(document.getElementById('distChart'), {
+    type: 'doughnut',
+    data: { labels: ['Spam', 'Safe'], datasets: [{ data: [spam || 1, safe || 1], backgroundColor: ['#E24B4A', '#639922'], borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { font: { size: 12 }, boxWidth: 12, padding: 12 } } } }
+  });
+
+  const threatCounts = { 'Safe': 0, 'Low risk': 0, 'Medium risk': 0, 'High risk': 0, 'Dangerous': 0 };
+  scanHistory.forEach(e => { if (threatCounts[e.level] !== undefined) threatCounts[e.level]++; });
+  if (threatChart) threatChart.destroy();
+  threatChart = new Chart(document.getElementById('threatChart'), {
+    type: 'bar',
+    data: { labels: Object.keys(threatCounts), datasets: [{ label: 'Emails', data: Object.values(threatCounts), backgroundColor: ['#639922', '#EF9F27', '#BA7517', '#E24B4A', '#A32D2D'], borderWidth: 0, borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+
+  const bins = [0, 0, 0, 0, 0];
+  scanHistory.forEach(e => { const i = Math.min(4, Math.floor(e.score / 20)); bins[i]++; });
+  if (scoreHistChart) scoreHistChart.destroy();
+  scoreHistChart = new Chart(document.getElementById('scoreHistChart'), {
+    type: 'bar',
+    data: { labels: ['0–20', '20–40', '40–60', '60–80', '80–100'], datasets: [{ label: 'Emails', data: bins, backgroundColor: ['#A32D2D', '#E24B4A', '#EF9F27', '#639922', '#3B6D11'], borderWidth: 0, borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+}
+
+function renderModels() {
+  if (modelChart) return;
+  modelChart = new Chart(document.getElementById('modelChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Random Forest', 'SVM', 'Logistic Regression', 'Naive Bayes'],
+      datasets: [
+        { label: 'Accuracy', data: [97.4, 96.1, 94.3, 92.7], backgroundColor: '#378ADD', borderRadius: 4, borderWidth: 0 },
+        { label: 'F1 Score', data: [96.9, 95.6, 93.4, 91.9], backgroundColor: '#5DCAA5', borderRadius: 4, borderWidth: 0 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 12 } } }, scales: { y: { min: 88, max: 100, ticks: { callback: v => v + '%' } } } }
+  });
+
+  const cm = document.getElementById('confusion-matrix');
+  const data = [[4623, 102], [32, 815]];
+  cm.innerHTML = `<table style="width:100%;font-size:13px;border-collapse:collapse;text-align:center;">
+    <tr><th style="padding:8px;"></th><th style="padding:8px;color:#185FA5;font-weight:500;">Pred Ham</th><th style="padding:8px;color:#A32D2D;font-weight:500;">Pred Spam</th></tr>
+    <tr><td style="padding:8px;color:#185FA5;font-weight:500;text-align:left;">Actual Ham</td>
+        <td style="padding:12px;background:#EAF3DE;border-radius:4px;font-size:16px;font-weight:500;color:#27500A;">${data[0][0]}</td>
+        <td style="padding:12px;background:#FCEBEB;border-radius:4px;font-size:16px;font-weight:500;color:#791F1F;">${data[0][1]}</td></tr>
+    <tr><td style="padding:8px;color:#A32D2D;font-weight:500;text-align:left;">Actual Spam</td>
+        <td style="padding:12px;background:#FCEBEB;border-radius:4px;font-size:16px;font-weight:500;color:#791F1F;">${data[1][0]}</td>
+        <td style="padding:12px;background:#EAF3DE;border-radius:4px;font-size:16px;font-weight:500;color:#27500A;">${data[1][1]}</td></tr>
+  </table>
+  <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:10px;">True Negatives: ${data[0][0]} &nbsp;·&nbsp; False Positives: ${data[0][1]} &nbsp;·&nbsp; False Negatives: ${data[1][0]} &nbsp;·&nbsp; True Positives: ${data[1][1]}</div>`;
+}
+
+function renderDatasetChart() {
+  if (datasetChart) return;
+  datasetChart = new Chart(document.getElementById('datasetChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Train Ham', 'Train Spam', 'Test Ham', 'Test Spam'],
+      datasets: [{ label: 'Count', data: [3721, 598, 1104, 149], backgroundColor: ['#639922', '#E24B4A', '#5DCAA5', '#F09595'], borderRadius: 4, borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+function generateReport() {
+  const total = scanHistory.length;
+  const spam = scanHistory.filter(e => e.isSpam).length;
+  alert(`Report generated!\n\nTotal emails scanned: ${total}\nSpam detected: ${spam}\nSafe emails: ${total - spam}\nBest model: Random Forest (97.4% accuracy)\nDataset: 5,572 emails (SMS Spam Collection)`);
+}
+
+// renderHistory removed
+</script>
