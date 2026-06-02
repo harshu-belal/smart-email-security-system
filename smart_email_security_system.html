@@ -401,18 +401,18 @@ async function analyzeEmail() {
     }
 
     try {
-
-        const response = await fetch("/predict,")
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email: email
-                })
-            }
-        );
+   const response = await fetch(
+    "/predict",
+    {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            email: email
+        })
+    }
+);
 
         const data = await response.json();
         // Save scan to history
