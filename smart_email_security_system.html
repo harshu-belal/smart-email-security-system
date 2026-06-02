@@ -236,8 +236,6 @@ Example: Congratulations! You've WON a $1000 gift card. Click here to claim: htt
     </div>
 
 
-    </div>
-
     <!-- ANALYTICS PAGE -->
     <div class="page" id="page-analytics">
       <div class="page-title">Analytics</div>
@@ -404,7 +402,7 @@ async function analyzeEmail() {
 
     try {
 
-        const response = await fetch("/predict"),
+        const response = await fetch("/predict")
             {
                 method: "POST",
                 headers: {
