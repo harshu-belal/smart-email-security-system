@@ -68,7 +68,6 @@ An AI-powered Email Security Platform that detects Spam, Phishing Attempts, Susp
 ### Backend
 
 * Flask
-* Flask-CORS
 
 ### Machine Learning
 
